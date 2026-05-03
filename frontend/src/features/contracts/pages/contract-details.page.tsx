@@ -1,0 +1,273 @@
+import { Download, Mail } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import {
+  downloadContractPdf,
+  getContractById,
+  resendSignatureEmail,
+  type Contract,
+} from '../api/contracts.api';
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat('fr-MA', {
+    dateStyle: 'medium',
+    timeZone: 'Africa/Casablanca',
+  }).format(new Date(date));
+}
+
+function getStatusClass(status: Contract['status']) {
+  switch (status) {
+    case 'UNSIGNED':
+      return 'bg-blue-100 text-blue-700';
+    case 'ACTIVE':
+      return 'bg-green-100 text-green-700';
+    case 'EXPIRED':
+      return 'bg-red-100 text-red-700';
+    case 'DRAFT':
+      return 'bg-gray-100 text-gray-700';
+    case 'TERMINATED':
+      return 'bg-yellow-100 text-yellow-700';
+    default:
+      return 'bg-gray-100 text-gray-700';
+  }
+}
+
+export default function ContractDetailsPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [isSendingSignature, setIsSendingSignature] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+
+    getContractById(Number(id)).then(setContract);
+  }, [id]);
+
+  const handleDownloadPdf = async () => {
+    if (!contract) return;
+
+    const blob = await downloadContractPdf(contract.id);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `contrat-${contract.contractNumber}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSendSignature = async () => {
+    if (!contract) return;
+
+    setIsSendingSignature(true);
+    try {
+      const updatedContract = await resendSignatureEmail(contract.id);
+      setContract(updatedContract);
+      toast.success(
+        updatedContract.emailSent
+          ? 'Email de signature envoye'
+          : 'Lien de signature prepare',
+      );
+
+      if (updatedContract.signatureUrl) {
+        try {
+          await navigator.clipboard?.writeText(updatedContract.signatureUrl);
+          toast.success('Lien copie dans le presse-papiers');
+        } catch {
+          console.info('Lien de signature:', updatedContract.signatureUrl);
+        }
+      }
+    } catch {
+      toast.error("Impossible de preparer le lien de signature");
+    } finally {
+      setIsSendingSignature(false);
+    }
+  };
+
+  if (!contract) {
+    return (
+      <div className="rounded-xl border border-gray-100 bg-white p-8 shadow-sm">
+        <p className="text-gray-500">Chargement du contrat...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <button
+            onClick={() => navigate('/contracts')}
+            className="mb-3 cursor-pointer text-sm text-gray-500 transition hover:text-blue-600"
+          >
+            Retour aux contrats
+          </button>
+
+          <h1 className="text-3xl font-bold text-gray-900">
+            {contract.title}
+          </h1>
+
+          <p className="mt-1 text-gray-500">
+            Contrat #{contract.contractNumber}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleDownloadPdf}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-5 py-3 text-gray-700 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700"
+            title="Telecharger le PDF"
+          >
+            <Download size={18} />
+            PDF
+          </button>
+
+          {!contract.signedAt && (
+            <button
+              onClick={handleSendSignature}
+              disabled={isSendingSignature}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              title="Envoyer le lien de signature"
+            >
+              <Mail size={18} />
+              Signature
+            </button>
+          )}
+
+          <button
+            onClick={() => navigate(`/contracts/${contract.id}/edit`)}
+            className="cursor-pointer rounded-lg border border-gray-300 px-5 py-3 text-gray-700 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700"
+          >
+            Modifier
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md lg:col-span-2">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Informations du contrat
+            </h2>
+
+            <span
+              className={`rounded-full px-3 py-1 text-sm font-medium ${getStatusClass(
+                contract.status,
+              )}`}
+            >
+              {contract.status}
+            </span>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <p className="text-sm text-gray-500">Client</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {contract.clientName}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">CIN</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {contract.clientCin || '-'}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {contract.clientEmail || '-'}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Telephone</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {contract.clientPhone || '-'}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Montant</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {Number(contract.amount).toLocaleString('fr-MA')} MAD
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Date de debut</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {formatDate(contract.startDate)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Date de fin</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {formatDate(contract.endDate)}
+              </p>
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-sm text-gray-500">Adresse</p>
+              <p className="mt-1 rounded-xl bg-gray-50 p-4 text-gray-700">
+                {contract.clientAddress || 'Aucune adresse'}
+              </p>
+            </div>
+
+            <div className="md:col-span-2">
+              <p className="text-sm text-gray-500">Description</p>
+              <p className="mt-1 rounded-xl bg-gray-50 p-4 text-gray-700">
+                {contract.description || 'Aucune description'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md">
+          <h2 className="text-xl font-semibold text-gray-900">Suivi</h2>
+
+          <div className="mt-5 space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">Cree le</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {formatDate(contract.createdAt)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Modifie le</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {formatDate(contract.updatedAt)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Signature</p>
+              <p className="mt-1 font-medium text-gray-900">
+                {contract.signedAt
+                  ? `${contract.signerName || contract.clientName} - ${formatDate(
+                      contract.signedAt,
+                    )}`
+                  : 'En attente'}
+              </p>
+            </div>
+
+            {'createdBy' in contract && contract.createdBy && (
+              <div>
+                <p className="text-sm text-gray-500">Cree par</p>
+                <p className="mt-1 font-medium text-gray-900">
+                  {contract.createdBy.fullName}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
