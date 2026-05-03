@@ -1,4 +1,4 @@
-# Deploiement gratuit
+# Deploiement
 
 Architecture recommandee:
 
