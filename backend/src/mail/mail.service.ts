@@ -4,6 +4,19 @@ import nodemailer from 'nodemailer';
 
 import { Contract } from '../contracts/entities/contract.entity';
 
+type MailMessage = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+};
+
+type MailSender = {
+  name?: string;
+  email: string;
+};
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -14,18 +27,19 @@ export class MailService {
     contract: Contract,
     signatureUrl: string,
   ): Promise<boolean> {
+    const apiKey = this.configService.get<string>('BREVO_API_KEY');
     const host = this.configService.get<string>('MAIL_HOST');
     const port = Number(this.configService.get<string>('MAIL_PORT') ?? 587);
     const user = this.configService.get<string>('MAIL_USER');
     const pass = this.configService.get<string>('MAIL_PASSWORD');
     const from =
       this.configService.get<string>('MAIL_FROM') ?? 'noreply@contrats.local';
+    const to = contract.clientEmail;
 
-    if (!host || !user || !pass || !contract.clientEmail) {
+    if (!to) {
       this.logger.warn(
         [
-          'Configuration SMTP incomplete. Email non envoye.',
-          `Destinataire: ${contract.clientEmail ?? '-'}`,
+          'Destinataire manquant. Email non envoye.',
           `Contrat: ${contract.contractNumber}`,
           `Lien de signature: ${signatureUrl}`,
         ].join('\n'),
@@ -34,34 +48,44 @@ export class MailService {
       return false;
     }
 
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
-      },
-    });
+    const message: MailMessage = {
+      from,
+      to,
+      subject: `Signature du contrat ${contract.contractNumber}`,
+      text: [
+        `Bonjour ${contract.clientName},`,
+        '',
+        `Votre contrat ${contract.contractNumber} est pret pour signature.`,
+        `Veuillez ouvrir ce lien pour signer: ${signatureUrl}`,
+        '',
+        'Merci.',
+      ].join('\n'),
+      html: this.buildSignatureEmailHtml(contract, signatureUrl),
+    };
 
     try {
-      await transporter.sendMail({
-        from,
-        to: contract.clientEmail,
-        subject: `Signature du contrat ${contract.contractNumber}`,
-        text: [
-          `Bonjour ${contract.clientName},`,
-          '',
-          `Votre contrat ${contract.contractNumber} est pret pour signature.`,
-          `Veuillez ouvrir ce lien pour signer: ${signatureUrl}`,
-          '',
-          'Merci.',
-        ].join('\n'),
-        html: this.buildSignatureEmailHtml(contract, signatureUrl),
-      });
+      if (apiKey) {
+        await this.sendWithBrevoApi(message, contract.clientName, apiKey);
+      } else {
+        if (!host || !user || !pass) {
+          this.logger.warn(
+            [
+              'Configuration email incomplete. Email non envoye.',
+              'Ajoutez BREVO_API_KEY ou configurez MAIL_HOST, MAIL_USER et MAIL_PASSWORD.',
+              `Destinataire: ${to}`,
+              `Contrat: ${contract.contractNumber}`,
+              `Lien de signature: ${signatureUrl}`,
+            ].join('\n'),
+          );
+
+          return false;
+        }
+
+        await this.sendWithSmtp(message, host, port, user, pass);
+      }
 
       this.logger.log(
-        `Email de signature envoye a ${contract.clientEmail} pour le contrat ${contract.contractNumber}`,
+        `Email de signature envoye a ${to} pour le contrat ${contract.contractNumber}`,
       );
 
       return true;
@@ -78,6 +102,90 @@ export class MailService {
 
       return false;
     }
+  }
+
+  private async sendWithSmtp(
+    message: MailMessage,
+    host: string,
+    port: number,
+    user: string,
+    pass: string,
+  ): Promise<void> {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: {
+        user,
+        pass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+    });
+
+    await transporter.sendMail(message);
+  }
+
+  private async sendWithBrevoApi(
+    message: MailMessage,
+    recipientName: string,
+    apiKey: string,
+  ): Promise<void> {
+    const endpoint =
+      this.configService.get<string>('BREVO_API_URL') ??
+      'https://api.brevo.com/v3/smtp/email';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const sender = this.parseSender(message.from);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': apiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender,
+          to: [
+            {
+              email: message.to,
+              name: recipientName,
+            },
+          ],
+          subject: message.subject,
+          textContent: message.text,
+          htmlContent: message.html,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(
+          `Brevo API error ${response.status}: ${responseText || response.statusText}`,
+        );
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private parseSender(from: string): MailSender {
+    const match = from.match(/^\s*"?([^"<]*)"?\s*<([^>]+)>\s*$/);
+
+    if (!match) {
+      return { email: from.trim() };
+    }
+
+    const name = match[1].trim();
+
+    return {
+      email: match[2].trim(),
+      ...(name ? { name } : {}),
+    };
   }
 
   private buildSignatureEmailHtml(

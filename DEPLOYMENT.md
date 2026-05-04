@@ -5,7 +5,7 @@ Architecture recommandee:
 - Frontend: Vercel ou Cloudflare Pages
 - Backend: Render Free Web Service
 - Base de donnees: Neon Free PostgreSQL
-- Email: Brevo SMTP
+- Email: Brevo API transactionnelle (recommande) ou Brevo SMTP en fallback
 
 ## 1. Neon PostgreSQL
 
@@ -29,11 +29,14 @@ JWT_SECRET=change_me_to_a_long_secret
 JWT_EXPIRES_IN=1d
 FRONTEND_URL=https://your-frontend-domain.vercel.app
 FRONTEND_URLS=https://your-frontend-domain.vercel.app,http://localhost:5173
+MAIL_FROM="Gestion des contrats <verified-sender@example.com>"
+BREVO_API_KEY=xkeysib-your_brevo_api_key
+
+# Fallback SMTP si BREVO_API_KEY n'est pas defini
 MAIL_HOST=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_USER=your_brevo_smtp_login
 MAIL_PASSWORD=your_brevo_smtp_key
-MAIL_FROM="Gestion des contrats <verified-sender@example.com>"
 COMPANY_NAME=TechCare Maintenance
 COMPANY_TAGLINE=Maintenance informatique, support et securite
 COMPANY_EMAIL=support@example.com
