@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '../features/auth/pages/login.page';
+import InvitationRegisterPage from '../features/auth/pages/invitation-register.page';
 import Dashboard from '../pages/dashboard';
 import ContractsPage from '../features/contracts/pages/contracts.page';
 import CreateContractPage from '../features/contracts/pages/create-contract.page';
@@ -36,6 +37,7 @@ export default function Router() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/register/:token" element={<InvitationRegisterPage />} />
         <Route path="/signature/:token" element={<SignaturePage />} />
 
         <Route

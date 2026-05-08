@@ -104,6 +104,73 @@ export class MailService {
     }
   }
 
+  async sendUserInvitation(
+    email: string,
+    registrationUrl: string,
+    expiresAt: Date,
+  ): Promise<boolean> {
+    const apiKey = this.configService.get<string>('BREVO_API_KEY');
+    const host = this.configService.get<string>('MAIL_HOST');
+    const port = Number(this.configService.get<string>('MAIL_PORT') ?? 587);
+    const user = this.configService.get<string>('MAIL_USER');
+    const pass = this.configService.get<string>('MAIL_PASSWORD');
+    const from =
+      this.configService.get<string>('MAIL_FROM') ?? 'noreply@contrats.local';
+
+    const message: MailMessage = {
+      from,
+      to: email,
+      subject: 'Invitation a creer votre compte',
+      text: [
+        'Bonjour,',
+        '',
+        "Un administrateur vous a invite a creer votre compte sur l'application de gestion des contrats.",
+        `Veuillez ouvrir ce lien pour finaliser votre inscription: ${registrationUrl}`,
+        `Ce lien expire le ${expiresAt.toLocaleString('fr-FR')}.`,
+        '',
+        'Merci.',
+      ].join('\n'),
+      html: this.buildUserInvitationEmailHtml(registrationUrl, expiresAt),
+    };
+
+    try {
+      if (apiKey) {
+        await this.sendWithBrevoApi(message, email, apiKey);
+      } else {
+        if (!host || !user || !pass) {
+          this.logger.warn(
+            [
+              'Configuration email incomplete. Invitation non envoyee.',
+              'Ajoutez BREVO_API_KEY ou configurez MAIL_HOST, MAIL_USER et MAIL_PASSWORD.',
+              `Destinataire: ${email}`,
+              `Lien inscription: ${registrationUrl}`,
+            ].join('\n'),
+          );
+
+          return false;
+        }
+
+        await this.sendWithSmtp(message, host, port, user, pass);
+      }
+
+      this.logger.log(`Invitation utilisateur envoyee a ${email}`);
+
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.error(
+        [
+          `Invitation utilisateur non envoyee a ${email}.`,
+          message,
+          `Lien inscription: ${registrationUrl}`,
+        ].join('\n'),
+      );
+
+      return false;
+    }
+  }
+
   private async sendWithSmtp(
     message: MailMessage,
     host: string,
@@ -209,6 +276,33 @@ export class MailService {
         <p style="color: #6b7280; font-size: 13px;">
           Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur:<br />
           ${this.escapeHtml(signatureUrl)}
+        </p>
+      </div>
+    `;
+  }
+
+  private buildUserInvitationEmailHtml(
+    registrationUrl: string,
+    expiresAt: Date,
+  ): string {
+    return `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.55;">
+        <h2 style="margin-bottom: 8px;">Creation de votre compte</h2>
+        <p>Bonjour,</p>
+        <p>
+          Un administrateur vous a invite a creer votre compte sur l'application
+          de gestion des contrats.
+        </p>
+        <p>
+          <a href="${this.escapeHtml(registrationUrl)}"
+             style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none;">
+            Creer mon compte
+          </a>
+        </p>
+        <p style="color: #6b7280; font-size: 13px;">
+          Ce lien expire le ${this.escapeHtml(expiresAt.toLocaleString('fr-FR'))}.<br />
+          Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur:<br />
+          ${this.escapeHtml(registrationUrl)}
         </p>
       </div>
     `;

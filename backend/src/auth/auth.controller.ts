@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards,Get,Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { CompleteInvitationDto } from './dto/complete-invitation.dto';
 import { JwtAuthGuard } from './guards/auth-jwt.guard';
 
 @Controller('auth')
@@ -11,6 +12,11 @@ export class AuthController {
   @Post('register')
   register(@Body() data: CreateUserDto) {
     return this.authService.register(data);
+  }
+
+  @Post('register/invitation')
+  completeInvitation(@Body() data: CompleteInvitationDto) {
+    return this.authService.completeInvitation(data);
   }
 
   @Post('login')

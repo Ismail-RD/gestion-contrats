@@ -5,11 +5,11 @@ import toast from 'react-hot-toast';
 
 import { getProfile } from '../../auth/api/auth.api';
 import {
-  createUser,
   deleteUser,
   getUsers,
+  inviteUser,
   updateUserRole,
-  type CreateUserData,
+  type InviteUserData,
   type User,
   type UserRole,
 } from '../api/users.api';
@@ -35,12 +35,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | UserRole>('ALL');
 
-  const [form, setForm] = useState<CreateUserData>({
-    fullName: '',
-    username: '',
+  const [form, setForm] = useState<InviteUserData>({
     email: '',
-    password: '',
-    role: 'USER',
   });
 
   useEffect(() => {
@@ -66,18 +62,17 @@ export default function UsersPage() {
     event.preventDefault();
 
     try {
-      const createdUser = await createUser(form);
+      const invitation = await inviteUser(form);
 
-      setUsers((prev) => [createdUser, ...prev]);
       setForm({
-        fullName: '',
-        username: '',
         email: '',
-        password: '',
-        role: 'USER',
       });
       setShowForm(false);
-      toast.success('Utilisateur cree avec succes');
+      toast.success(
+        invitation.emailSent
+          ? 'Invitation envoyee avec succes'
+          : 'Invitation creee, mais email non envoye',
+      );
     } catch {
       toast.error("Erreur lors de la creation de l'utilisateur");
     }
@@ -197,53 +192,19 @@ export default function UsersPage() {
           className="surface rounded-lg p-5"
         >
           <h2 className="mb-4 text-lg font-black text-slate-950">
-            Nouvel utilisateur
+            Inviter un utilisateur
           </h2>
 
           <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
-            <input
-              name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
-              placeholder="Nom complet"
-              className="control h-11 rounded-lg px-4 text-sm font-bold"
-            />
-
-            <input
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              placeholder="Username"
-              className="control h-11 rounded-lg px-4 text-sm font-bold"
-            />
-
             <input
               name="email"
               type="email"
               value={form.email}
               onChange={handleChange}
               placeholder="Email"
-              className="control h-11 rounded-lg px-4 text-sm font-bold"
+              required
+              className="control h-11 rounded-lg px-4 text-sm font-bold md:col-span-2"
             />
-
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Mot de passe"
-              className="control h-11 rounded-lg px-4 text-sm font-bold"
-            />
-
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="control h-11 cursor-pointer rounded-lg px-4 text-sm font-bold"
-            >
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
 
             <div className="flex justify-end gap-3 md:col-span-2">
               <button
@@ -258,7 +219,7 @@ export default function UsersPage() {
                 type="submit"
                 className="h-10 cursor-pointer rounded-lg bg-slate-950 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800"
               >
-                Creer utilisateur
+                Envoyer invitation
               </button>
             </div>
           </form>

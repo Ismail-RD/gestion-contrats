@@ -27,3 +27,17 @@ export const getProfile = async () => {
   const res = await api.get('/auth/profile');
   return res.data;
 };
+
+export const completeInvitation = async (
+  token: string,
+  username: string,
+  password: string,
+) => {
+  const res = await api.post('/auth/register/invitation', {
+    token,
+    username: username.trim(),
+    password,
+  });
+
+  return res.data;
+};

@@ -12,12 +12,14 @@ export type User = {
   updatedAt: string;
 };
 
-export type CreateUserData = {
-  fullName: string;
-  username: string;
+export type InviteUserData = {
   email: string;
-  password: string;
-  role: UserRole;
+};
+
+export type InviteUserResponse = {
+  email: string;
+  emailSent: boolean;
+  registrationUrl: string;
 };
 
 export const getUsers = async (): Promise<User[]> => {
@@ -25,8 +27,10 @@ export const getUsers = async (): Promise<User[]> => {
   return res.data;
 };
 
-export const createUser = async (data: CreateUserData): Promise<User> => {
-  const res = await api.post<User>('/users', data);
+export const inviteUser = async (
+  data: InviteUserData,
+): Promise<InviteUserResponse> => {
+  const res = await api.post<InviteUserResponse>('/users', data);
   return res.data;
 };
 

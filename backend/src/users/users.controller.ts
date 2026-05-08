@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { JwtAuthGuard } from '../auth/guards/auth-jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -38,8 +38,8 @@ export class UsersController {
   }
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.createdByAdmin(dto);
+  invite(@Body() dto: InviteUserDto) {
+    return this.usersService.inviteByAdmin(dto);
   }
 
   @Patch(':id/role')

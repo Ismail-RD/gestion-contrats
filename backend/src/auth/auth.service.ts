@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CompleteInvitationDto } from './dto/complete-invitation.dto';
 import * as bcrypt from 'bcrypt';
-import { JwtAuthGuard } from './guards/auth-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class AuthService {
@@ -19,6 +19,10 @@ export class AuthService {
     });
      const {password, ...result} = user;
      return result;
+  }
+
+  async completeInvitation(data: CompleteInvitationDto) {
+    return this.usersService.completeInvitation(data);
   }
 
   async validateUser(username: string, password: string) {
