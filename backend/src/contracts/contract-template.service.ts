@@ -345,7 +345,7 @@ ET`;
       `Montant: ${Number(contract.amount).toFixed(2)} MAD`,
       '',
       'PERIMETRE DE MAINTENANCE',
-      ...this.buildPdfDescriptionLines(description, 76),
+      ...this.buildPdfDescriptionLines(description, 92),
       '',
       'ENGAGEMENTS DE SERVICE',
       '- Support a distance et intervention sur site selon la criticite.',
@@ -446,8 +446,8 @@ ET`;
     lines: string[],
     reserveSignatureSpace: boolean,
   ): PdfTextPage[] {
-    const firstPageLineCount = reserveSignatureSpace ? 29 : 38;
-    const continuationLineCount = reserveSignatureSpace ? 41 : 48;
+    const firstPageLineCount = reserveSignatureSpace ? 27 : 36;
+    const continuationLineCount = reserveSignatureSpace ? 39 : 46;
     const pages: PdfTextPage[] = [];
     let remainingLines = [...lines];
 
