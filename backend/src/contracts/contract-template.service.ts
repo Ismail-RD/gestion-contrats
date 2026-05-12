@@ -84,7 +84,7 @@ export class ContractTemplateService {
       .field span { color: var(--muted); }
       .field strong { color: var(--ink); }
       .section { margin-top: 18px; border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: var(--soft); }
-      .section p { margin: 0; line-height: 1.58; font-size: 13px; }
+      .section p { margin: 0; line-height: 1.58; font-size: 13px; white-space: pre-line; }
       .clauses { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
       .clause { border: 1px solid #dbeafe; border-radius: 14px; background: #fff; padding: 14px; font-size: 12.5px; line-height: 1.45; }
       .clause strong { display: block; margin-bottom: 5px; color: #1d4ed8; }
@@ -345,7 +345,7 @@ ET`;
       `Montant: ${Number(contract.amount).toFixed(2)} MAD`,
       '',
       'PERIMETRE DE MAINTENANCE',
-      ...this.wrapPdfText(description, 76),
+      ...this.buildPdfDescriptionLines(description, 76),
       '',
       'ENGAGEMENTS DE SERVICE',
       '- Support a distance et intervention sur site selon la criticite.',
@@ -360,7 +360,7 @@ ET`;
       contract.signatureDataUrl
         ? 'Signature manuscrite integree au PDF.'
         : '',
-    ].filter(Boolean);
+    ].filter((line) => line !== undefined && line !== null);
   }
 
   private createPdfBuffer(
@@ -632,6 +632,31 @@ ET`;
     }
 
     return lines;
+  }
+
+  private buildPdfDescriptionLines(value: string, maxLength: number): string[] {
+    const paragraphs = this.splitPdfParagraphs(value);
+    const lines: string[] = [];
+
+    paragraphs.forEach((paragraph, index) => {
+      if (index > 0) {
+        lines.push('');
+      }
+
+      lines.push(...this.wrapPdfText(paragraph, maxLength));
+    });
+
+    return lines;
+  }
+
+  private splitPdfParagraphs(value: string): string[] {
+    return value
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/([^\n])\s+(\d{1,2}\.\s+)/g, '$1\n\n$2')
+      .split(/\n{2,}|\n(?=\d{1,2}\.\s+)/)
+      .map((paragraph) => paragraph.replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
   }
 
   private formatDate(date: Date | string): string {
