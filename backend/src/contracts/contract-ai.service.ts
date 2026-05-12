@@ -85,7 +85,7 @@ export class ContractAiService {
             systemInstruction: {
               parts: [
                 {
-                  text: 'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat.',
+                  text: 'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat. La reponse doit etre substantielle, composee de plusieurs paragraphes complets.',
                 },
               ],
             },
@@ -100,7 +100,7 @@ export class ContractAiService {
               },
             ],
             generationConfig: {
-              maxOutputTokens: 900,
+              maxOutputTokens: 1800,
               temperature: 0.4,
             },
           }),
@@ -132,8 +132,10 @@ export class ContractAiService {
 
     return [
       'Redige une description contractuelle professionnelle en francais.',
-      'Le texte doit etre clair, concret, et adapte a un contrat commercial simple.',
-      'Inclure les elements utiles: objet, duree, montant, obligations principales, modalites de paiement, signature et resiliation.',
+      'Le texte doit etre long, detaille et directement exploitable dans un contrat.',
+      'Produis entre 6 et 9 paragraphes complets, chacun avec 3 a 5 phrases.',
+      'Inclure les elements utiles: objet du contrat, duree, montant, modalites de paiement, obligations du prestataire, obligations du client, suivi de la prestation, confidentialite si pertinente, signature et resiliation.',
+      'Utiliser un style juridique simple, professionnel et fluide, sans listes a puces.',
       "Ne pas inventer d'informations absentes; les formuler prudemment si elles ne sont pas precisees.",
       '',
       `Titre: ${dto.title || 'non precise'}`,
