@@ -85,7 +85,7 @@ export class ContractAiService {
             systemInstruction: {
               parts: [
                 {
-                  text: 'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat. La reponse doit etre substantielle, composee de plusieurs paragraphes complets.',
+                  text: 'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". La reponse doit etre longue, detaillee, operationnelle et composee de clauses contractuelles completes. Ne produis jamais un simple resume. Ne mentionne pas que tu es une IA et ne donne pas de conseils externes.',
                 },
               ],
             },
@@ -100,8 +100,8 @@ export class ContractAiService {
               },
             ],
             generationConfig: {
-              maxOutputTokens: 1800,
-              temperature: 0.4,
+              maxOutputTokens: 3500,
+              temperature: 0.55,
             },
           }),
         },
@@ -131,12 +131,13 @@ export class ContractAiService {
     const existingDescription = dto.existingDescription ?? dto.description;
 
     return [
-      'Redige une description contractuelle professionnelle en francais.',
-      'Le texte doit etre long, detaille et directement exploitable dans un contrat.',
-      'Produis entre 6 et 9 paragraphes complets, chacun avec 3 a 5 phrases.',
-      'Inclure les elements utiles: objet du contrat, duree, montant, modalites de paiement, obligations du prestataire, obligations du client, suivi de la prestation, confidentialite si pertinente, signature et resiliation.',
-      'Utiliser un style juridique simple, professionnel et fluide, sans listes a puces.',
-      "Ne pas inventer d'informations absentes; les formuler prudemment si elles ne sont pas precisees.",
+      'Redige un texte contractuel detaille en francais pour le champ "Description et conditions".',
+      'Longueur obligatoire: minimum 900 mots. Si la premiere version est trop courte, continue et enrichis jusqu a atteindre cette longueur.',
+      'Structure obligatoire: clauses numerotees de 1 a 10 avec des paragraphes complets, pas une phrase courte par clause.',
+      'Chaque clause doit contenir des details pratiques, des obligations concretes, des modalites d execution et des consequences en cas de non-respect lorsque c est pertinent.',
+      'Clauses a couvrir obligatoirement: objet du contrat, perimetre de la prestation, duree, montant et paiement, obligations du prestataire, obligations du client, suivi et validation, confidentialite et donnees, signature, resiliation et effets de fin de contrat.',
+      "Lorsque certaines informations ne sont pas precisees, utilise des formulations standards prudentes adaptees a un contrat de services de maintenance informatique, sans inventer de nouvelles dates, de nouveaux montants ou de nouvelles identites.",
+      'Ne fais pas de markdown. N ajoute pas de conclusion hors contrat. N utilise pas de puces. Le resultat doit etre directement copiable dans le contrat.',
       '',
       `Titre: ${dto.title || 'non precise'}`,
       `Numero du contrat: ${dto.contractNumber || 'non precise'}`,
