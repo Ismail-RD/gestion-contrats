@@ -10,11 +10,15 @@ describe('ContractsService', () => {
   let service: ContractsService;
   let contractsRepository: {
     find: jest.Mock;
+    findOne: jest.Mock;
+    save: jest.Mock;
   };
 
   beforeEach(async () => {
     contractsRepository = {
       find: jest.fn(),
+      findOne: jest.fn(),
+      save: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -68,5 +72,31 @@ describe('ContractsService', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('clears a pending signature token when a contract is terminated', async () => {
+    contractsRepository.findOne.mockResolvedValue({
+      id: 1,
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
+      status: ContractStatus.UNSIGNED,
+      signedAt: null,
+      signatureToken: 'pending-token',
+      clientFirstName: 'Yasser',
+      clientLastName: 'Mourad',
+      createdBy: { id: 1 },
+    });
+    contractsRepository.save.mockImplementation((contract) =>
+      Promise.resolve(contract),
+    );
+
+    const result = await service.update(
+      1,
+      { status: ContractStatus.TERMINATED },
+      { role: 'ADMIN' } as any,
+    );
+
+    expect(result.status).toBe(ContractStatus.TERMINATED);
+    expect(result.signatureToken).toBeNull();
   });
 });

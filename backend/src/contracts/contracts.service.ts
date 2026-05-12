@@ -111,6 +111,10 @@ export class ContractsService {
 
     Object.assign(contract, updateContractDto);
 
+    if (updateContractDto.status === ContractStatus.TERMINATED) {
+      contract.signatureToken = null;
+    }
+
     contract.clientName =
       updateContractDto.clientName ??
       this.getClientName({
@@ -221,6 +225,10 @@ export class ContractsService {
       throw new BadRequestException('Ce contrat est deja signe.');
     }
 
+    if (contract.status === ContractStatus.TERMINATED) {
+      throw new BadRequestException('Ce contrat est resilie.');
+    }
+
     contract.signatureToken = this.generateSignatureToken();
     contract.signatureRequestedAt = new Date();
     contract.status = ContractStatus.UNSIGNED;
@@ -257,6 +265,10 @@ export class ContractsService {
 
     if (contract.signedAt) {
       throw new BadRequestException('Ce contrat est deja signe.');
+    }
+
+    if (contract.status === ContractStatus.TERMINATED) {
+      throw new BadRequestException('Ce contrat est resilie.');
     }
 
     contract.signerName = confirmSignatureDto.signerName;

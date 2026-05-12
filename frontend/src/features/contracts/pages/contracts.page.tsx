@@ -1,4 +1,4 @@
-import { Download, FilePlus2, Search, Trash2 } from 'lucide-react';
+import { Ban, Download, FilePlus2, Search, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   deleteContract,
   getContracts,
+  terminateContract,
   type Contract,
 } from '../api/contracts.api';
 
@@ -40,6 +41,9 @@ export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [contractToDelete, setContractToDelete] = useState<number | null>(null);
+  const [contractToTerminate, setContractToTerminate] = useState<number | null>(
+    null,
+  );
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
@@ -88,6 +92,23 @@ export default function ContractsPage() {
       setContractToDelete(null);
     } catch {
       toast.error('Erreur lors de la suppression du contrat');
+    }
+  };
+
+  const confirmTerminate = async () => {
+    if (!contractToTerminate) return;
+
+    try {
+      const updatedContract = await terminateContract(contractToTerminate);
+      setContracts((prev) =>
+        prev.map((contract) =>
+          contract.id === contractToTerminate ? updatedContract : contract,
+        ),
+      );
+      toast.success('Contrat resilie avec succes');
+      setContractToTerminate(null);
+    } catch {
+      toast.error('Erreur lors de la resiliation du contrat');
     }
   };
 
@@ -285,6 +306,16 @@ export default function ContractsPage() {
                         Edit
                       </button>
 
+                      {contract.status !== 'TERMINATED' && (
+                        <button
+                          onClick={() => setContractToTerminate(contract.id)}
+                          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700"
+                          title="Resilier"
+                        >
+                          <Ban size={17} />
+                        </button>
+                      )}
+
                       <button
                         onClick={() => setContractToDelete(contract.id)}
                         className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
@@ -363,6 +394,40 @@ export default function ContractsPage() {
                 className="h-10 cursor-pointer rounded-lg bg-rose-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-rose-700"
               >
                 Supprimer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {contractToTerminate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="surface w-full max-w-sm rounded-lg p-6"
+          >
+            <h2 className="text-lg font-black text-slate-950">
+              Resilier ce contrat ?
+            </h2>
+
+            <p className="mt-2 text-sm font-medium text-slate-500">
+              Le contrat ne sera plus considere comme actif.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setContractToTerminate(null)}
+                className="h-10 cursor-pointer rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+
+              <button
+                onClick={confirmTerminate}
+                className="h-10 cursor-pointer rounded-lg bg-amber-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-amber-700"
+              >
+                Resilier
               </button>
             </div>
           </motion.div>

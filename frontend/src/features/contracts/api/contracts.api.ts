@@ -1,5 +1,12 @@
 import { api } from "../../../lib/axios";
 
+export type ContractStatus =
+  | 'UNSIGNED'
+  | 'DRAFT'
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'TERMINATED';
+
 export type createContractData ={
     title: string;
     contractNumber: string;
@@ -40,7 +47,7 @@ export type Contract = {
   startDate: string;
   endDate: string;
   amount: string | number;
-  status: 'UNSIGNED' | 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED';
+  status: ContractStatus;
   signatureUrl?: string;
   emailSent?: boolean;
   signedAt?: string | null;
@@ -82,8 +89,19 @@ export const deleteContract = async (id : number)=>{
     return res.data;
 }
 
-export const updateContract = async (id : number, data: createContractData)=>{
+type UpdateContractData = Partial<createContractData> & {
+    status?: ContractStatus;
+};
+
+export const updateContract = async (id : number, data: UpdateContractData)=>{
     const res= await api.patch(`/contracts/${id}`,data);
+    return res.data;
+}
+
+export const terminateContract = async (id: number): Promise<Contract> => {
+    const res = await api.patch(`/contracts/${id}`, {
+        status: 'TERMINATED',
+    });
     return res.data;
 }
 

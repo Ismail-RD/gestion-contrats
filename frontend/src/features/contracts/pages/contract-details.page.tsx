@@ -1,4 +1,4 @@
-import { Download, Mail } from 'lucide-react';
+import { Ban, Download, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,6 +7,7 @@ import {
   downloadContractPdf,
   getContractById,
   resendSignatureEmail,
+  terminateContract,
   type Contract,
 } from '../api/contracts.api';
 
@@ -34,12 +35,22 @@ function getStatusClass(status: Contract['status']) {
   }
 }
 
+const statusLabels: Record<Contract['status'], string> = {
+  UNSIGNED: 'Non signe',
+  DRAFT: 'Brouillon',
+  ACTIVE: 'Actif',
+  EXPIRED: 'Expire',
+  TERMINATED: 'Resilie',
+};
+
 export default function ContractDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [contract, setContract] = useState<Contract | null>(null);
   const [isSendingSignature, setIsSendingSignature] = useState(false);
+  const [isTerminating, setIsTerminating] = useState(false);
+  const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -87,6 +98,22 @@ export default function ContractDetailsPage() {
     }
   };
 
+  const handleTerminate = async () => {
+    if (!contract) return;
+
+    setIsTerminating(true);
+    try {
+      const updatedContract = await terminateContract(contract.id);
+      setContract(updatedContract);
+      setShowTerminateConfirm(false);
+      toast.success('Contrat resilie avec succes');
+    } catch {
+      toast.error('Erreur lors de la resiliation du contrat');
+    } finally {
+      setIsTerminating(false);
+    }
+  };
+
   if (!contract) {
     return (
       <div className="rounded-xl border border-gray-100 bg-white p-8 shadow-sm">
@@ -125,7 +152,7 @@ export default function ContractDetailsPage() {
             PDF
           </button>
 
-          {!contract.signedAt && (
+          {!contract.signedAt && contract.status !== 'TERMINATED' && (
             <button
               onClick={handleSendSignature}
               disabled={isSendingSignature}
@@ -134,6 +161,17 @@ export default function ContractDetailsPage() {
             >
               <Mail size={18} />
               Signature
+            </button>
+          )}
+
+          {contract.status !== 'TERMINATED' && (
+            <button
+              onClick={() => setShowTerminateConfirm(true)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-amber-200 px-5 py-3 text-amber-700 shadow-sm transition hover:bg-amber-50"
+              title="Resilier le contrat"
+            >
+              <Ban size={18} />
+              Resilier
             </button>
           )}
 
@@ -158,7 +196,7 @@ export default function ContractDetailsPage() {
                 contract.status,
               )}`}
             >
-              {contract.status}
+              {statusLabels[contract.status]}
             </span>
           </div>
 
@@ -268,6 +306,38 @@ export default function ContractDetailsPage() {
           </div>
         </div>
       </div>
+
+      {showTerminateConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-lg border border-gray-100 bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900">
+              Resilier ce contrat ?
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Le contrat ne sera plus considere comme actif.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowTerminateConfirm(false)}
+                disabled={isTerminating}
+                className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Annuler
+              </button>
+
+              <button
+                onClick={handleTerminate}
+                disabled={isTerminating}
+                className="cursor-pointer rounded-lg bg-amber-600 px-4 py-2 font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Resilier
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
