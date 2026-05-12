@@ -136,39 +136,45 @@ export class ContractsService {
 
   async getSummaryStats(user: User) {
     const userFilter = this.getUserFilter(user);
-
-    const total = await this.contractsRepository.count({
+    const contracts = await this.contractsRepository.find({
       where: userFilter,
     });
 
-    const unsigned = await this.contractsRepository.count({
-      where: { ...userFilter, status: ContractStatus.UNSIGNED },
-    });
+    return contracts.reduce(
+      (stats, contract) => {
+        const status = this.withComputedStatus(contract).status;
 
-    const active = await this.contractsRepository.count({
-      where: { ...userFilter, status: ContractStatus.ACTIVE },
-    });
+        stats.total += 1;
 
-    const expired = await this.contractsRepository.count({
-      where: { ...userFilter, status: ContractStatus.EXPIRED },
-    });
+        switch (status) {
+          case ContractStatus.UNSIGNED:
+            stats.unsigned += 1;
+            break;
+          case ContractStatus.ACTIVE:
+            stats.active += 1;
+            break;
+          case ContractStatus.EXPIRED:
+            stats.expired += 1;
+            break;
+          case ContractStatus.DRAFT:
+            stats.draft += 1;
+            break;
+          case ContractStatus.TERMINATED:
+            stats.terminated += 1;
+            break;
+        }
 
-    const draft = await this.contractsRepository.count({
-      where: { ...userFilter, status: ContractStatus.DRAFT },
-    });
-
-    const terminated = await this.contractsRepository.count({
-      where: { ...userFilter, status: ContractStatus.TERMINATED },
-    });
-
-    return {
-      total,
-      unsigned,
-      active,
-      expired,
-      draft,
-      terminated,
-    };
+        return stats;
+      },
+      {
+        total: 0,
+        unsigned: 0,
+        active: 0,
+        expired: 0,
+        draft: 0,
+        terminated: 0,
+      },
+    );
   }
 
   async findExpiringSoon(user: User): Promise<Contract[]> {
