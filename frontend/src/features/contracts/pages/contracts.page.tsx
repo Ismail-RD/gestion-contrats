@@ -169,7 +169,7 @@ export default function ContractsPage() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-teal-700">
+          <p className="text-sm font-bold uppercase text-blue-700">
             Portefeuille
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
@@ -183,7 +183,7 @@ export default function ContractsPage() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={exportToCsv}
-            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
           >
             <Download size={18} />
             CSV
@@ -191,7 +191,7 @@ export default function ContractsPage() {
 
           <button
             onClick={() => navigate('/contracts/new')}
-            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800"
           >
             <FilePlus2 size={18} />
             Ajouter
@@ -224,8 +224,8 @@ export default function ContractsPage() {
                   onClick={() => handleStatusFilterChange(option.value)}
                   className={`h-10 cursor-pointer rounded-lg px-3 text-sm font-bold transition ${
                     isActive
-                      ? 'bg-teal-700 text-white shadow-md shadow-teal-900/12'
-                      : 'border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700'
+                      ? 'bg-blue-700 text-white shadow-md shadow-blue-900/12'
+                      : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >
                   {option.label}
@@ -271,7 +271,7 @@ export default function ContractsPage() {
                   <td className="px-5 py-4">
                     <button
                       onClick={() => navigate(`/contracts/${contract.id}`)}
-                      className="max-w-[280px] cursor-pointer truncate text-left font-black text-slate-950 transition hover:text-teal-700"
+                      className="max-w-[280px] cursor-pointer truncate text-left font-black text-slate-950 transition hover:text-blue-700"
                     >
                       {contract.title}
                     </button>
@@ -300,7 +300,7 @@ export default function ContractsPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => navigate(`/contracts/${contract.id}`)}
-                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                         title="Voir"
                       >
                         <Eye size={17} />

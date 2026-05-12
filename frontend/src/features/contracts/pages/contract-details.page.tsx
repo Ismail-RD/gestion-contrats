@@ -130,13 +130,13 @@ export default function ContractDetailsPage() {
         <div>
           <button
             onClick={() => navigate('/contracts')}
-            className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-teal-700"
+            className="mb-3 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-blue-700"
           >
             <ArrowLeft size={17} />
             Retour aux contrats
           </button>
 
-          <p className="text-sm font-bold uppercase text-teal-700">
+          <p className="text-sm font-bold uppercase text-blue-700">
             Fiche contrat
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
@@ -151,7 +151,7 @@ export default function ContractDetailsPage() {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDownloadPdf}
-            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             title="Telecharger le PDF"
           >
             <Download size={18} />
@@ -162,7 +162,7 @@ export default function ContractDetailsPage() {
             <button
               onClick={handleSendSignature}
               disabled={isSendingSignature}
-              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
               title="Envoyer le lien de signature"
             >
               <Mail size={18} />

@@ -58,7 +58,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-shell flex min-h-screen text-slate-900">
       <aside className="sticky top-0 hidden h-screen w-72 border-r border-slate-200/80 bg-white/88 p-5 shadow-[8px_0_28px_rgba(15,23,42,0.04)] backdrop-blur-xl lg:block">
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15">
             GC
           </div>
           <div>
@@ -82,14 +82,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 to={item.path}
                 className={`group relative flex min-h-11 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-bold transition ${
                   isActive
-                    ? 'bg-teal-700 text-white shadow-lg shadow-teal-900/12'
-                    : 'text-slate-600 hover:bg-teal-50 hover:text-teal-800'
+                    ? 'bg-blue-700 text-white shadow-lg shadow-blue-900/12'
+                    : 'text-slate-600 hover:bg-blue-50 hover:text-blue-800'
                 }`}
               >
                 {isActive && (
                   <motion.span
                     layoutId="active-nav"
-                    className="absolute inset-0 rounded-lg bg-teal-700"
+                    className="absolute inset-0 rounded-lg bg-blue-700"
                     transition={{ type: 'spring', stiffness: 380, damping: 34 }}
                   />
                 )}
@@ -132,7 +132,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <p className="text-xs font-medium text-slate-500">{user?.role}</p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-teal-100 bg-teal-50 font-black text-teal-800 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 font-black text-blue-800 shadow-sm">
               {initials}
             </div>
 
@@ -159,7 +159,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           >
             <div className="mb-8 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15">
                   GC
                 </div>
                 <div>
@@ -193,8 +193,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     onClick={closeMobileMenu}
                     className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-bold transition ${
                       isActive
-                        ? 'bg-teal-700 text-white shadow-lg shadow-teal-900/12'
-                        : 'text-slate-600 hover:bg-teal-50 hover:text-teal-800'
+                        ? 'bg-blue-700 text-white shadow-lg shadow-blue-900/12'
+                        : 'text-slate-600 hover:bg-blue-50 hover:text-blue-800'
                     }`}
                   >
                     <Icon size={18} />

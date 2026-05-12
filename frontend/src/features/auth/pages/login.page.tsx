@@ -35,7 +35,7 @@ export default function LoginPage() {
         className="surface w-full max-w-md rounded-lg p-7"
       >
         <div className="mb-7 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15">
             GC
           </div>
           <div>
@@ -82,7 +82,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button className="h-12 w-full cursor-pointer rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
+          <button className="h-12 w-full cursor-pointer rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800">
             Connexion
           </button>
         </form>

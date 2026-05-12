@@ -55,7 +55,7 @@ const statusClasses: Record<Contract['status'], string> = {
   TERMINATED: 'bg-amber-50 text-amber-700 ring-amber-100',
 };
 
-const chartColors = ['#0f766e', '#2563eb', '#e11d48', '#f59e0b', '#64748b'];
+const chartColors = ['#2563eb', '#0891b2', '#e11d48', '#f59e0b', '#64748b'];
 
 function monthLabel(date: string) {
   return new Intl.DateTimeFormat('fr-MA', {
@@ -195,7 +195,7 @@ export default function Dashboard() {
     >
       <div className="surface flex flex-col gap-5 rounded-lg p-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-teal-700">
+          <p className="text-sm font-bold uppercase text-blue-700">
             Pilotage contrats
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
@@ -207,8 +207,8 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="rounded-lg border border-teal-100 bg-teal-50 px-4 py-3">
-            <p className="text-xs font-black uppercase text-teal-700">
+          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
+            <p className="text-xs font-black uppercase text-blue-700">
               Montant actif
             </p>
             <p className="mt-1 text-lg font-black text-slate-950">
@@ -218,7 +218,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => navigate('/contracts/new')}
-            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800"
           >
             <FileText size={18} />
             Nouveau contrat
@@ -288,7 +288,7 @@ export default function Dashboard() {
                 Creation et signatures sur les six derniers mois.
               </p>
             </div>
-            <Activity className="text-teal-700" size={22} />
+            <Activity className="text-blue-700" size={22} />
           </div>
 
           <div className="h-80">
@@ -296,8 +296,8 @@ export default function Dashboard() {
               <AreaChart data={monthlyData} margin={{ left: 0, right: 8 }}>
                 <defs>
                   <linearGradient id="contractsFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0f766e" stopOpacity={0.28} />
-                    <stop offset="95%" stopColor="#0f766e" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.28} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="signedFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.22} />
@@ -318,7 +318,7 @@ export default function Dashboard() {
                   type="monotone"
                   dataKey="total"
                   name="Contrats"
-                  stroke="#0f766e"
+                  stroke="#2563eb"
                   fill="url(#contractsFill)"
                   strokeWidth={3}
                   activeDot={{ r: 5 }}
@@ -398,7 +398,7 @@ export default function Dashboard() {
 
             <button
               onClick={() => navigate('/contracts')}
-              className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+              className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
               Voir tout
             </button>
@@ -417,7 +417,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.04 }}
                   onClick={() => navigate(`/contracts/${contract.id}`)}
-                  className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white/75 p-4 text-left transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-md"
+                  className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white/75 p-4 text-left transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:shadow-md"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-black text-slate-950">

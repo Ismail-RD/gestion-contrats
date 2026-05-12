@@ -74,7 +74,7 @@ export default function CreateContractPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="surface rounded-lg p-7">
-        <p className="text-sm font-bold uppercase text-teal-700">
+        <p className="text-sm font-bold uppercase text-blue-700">
           Nouveau dossier
         </p>
         <h1 className="mb-6 mt-2 text-3xl font-black tracking-tight text-slate-950">
@@ -206,7 +206,7 @@ export default function CreateContractPage() {
 
             <button
               type="submit"
-              className="cursor-pointer rounded-lg bg-teal-700 px-5 py-3 font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+              className="cursor-pointer rounded-lg bg-blue-700 px-5 py-3 font-bold text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800"
             >
               Creer et envoyer la signature
             </button>

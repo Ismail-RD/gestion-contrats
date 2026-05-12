@@ -46,7 +46,7 @@ export default function InvitationRegisterPage() {
         className="surface w-full max-w-md rounded-lg p-7"
       >
         <div className="mb-7 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15">
             GC
           </div>
           <div>
@@ -61,12 +61,12 @@ export default function InvitationRegisterPage() {
 
         {isComplete ? (
           <div className="space-y-4">
-            <div className="rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm font-bold text-teal-700">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-bold text-blue-700">
               Compte cree avec succes. Redirection vers la connexion...
             </div>
             <Link
               to="/"
-              className="flex h-12 w-full items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800"
             >
               Aller a la connexion
             </Link>
@@ -112,7 +112,7 @@ export default function InvitationRegisterPage() {
 
             <button
               disabled={isSubmitting}
-              className="h-12 w-full cursor-pointer rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-12 w-full cursor-pointer rounded-lg bg-blue-700 text-sm font-black text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? 'Creation...' : 'Creer mon compte'}
             </button>

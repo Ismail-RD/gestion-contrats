@@ -80,7 +80,7 @@ export default function EditContractPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="surface rounded-lg p-7">
-        <p className="text-sm font-bold uppercase text-teal-700">
+        <p className="text-sm font-bold uppercase text-blue-700">
           Edition
         </p>
         <h1 className="mb-6 mt-2 text-3xl font-black tracking-tight text-slate-950">
@@ -126,7 +126,7 @@ export default function EditContractPage() {
 
             <button
               type="submit"
-              className="cursor-pointer rounded-lg bg-teal-700 px-4 py-2 font-bold text-white shadow-sm transition hover:bg-teal-800"
+              className="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 font-bold text-white shadow-sm transition hover:bg-blue-800"
             >
               Sauvegarder
             </button>

@@ -23,7 +23,7 @@ type CurrentUser = {
 };
 
 const roleBadgeClass: Record<UserRole, string> = {
-  ADMIN: 'bg-teal-50 text-teal-700 ring-teal-100',
+  ADMIN: 'bg-blue-50 text-blue-700 ring-blue-100',
   USER: 'bg-slate-100 text-slate-700 ring-slate-200',
 };
 
@@ -130,7 +130,7 @@ export default function UsersPage() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase text-teal-700">
+          <p className="text-sm font-bold uppercase text-blue-700">
             Administration
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
@@ -143,7 +143,7 @@ export default function UsersPage() {
 
         <button
           onClick={() => setShowForm((prev) => !prev)}
-          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:-translate-y-0.5 hover:bg-blue-800"
         >
           {showForm ? <X size={18} /> : <UserPlus size={18} />}
           {showForm ? 'Fermer' : 'Ajouter utilisateur'}
@@ -217,7 +217,7 @@ export default function UsersPage() {
 
               <button
                 type="submit"
-                className="h-10 cursor-pointer rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
+                className="h-10 cursor-pointer rounded-lg bg-blue-700 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800"
               >
                 Envoyer invitation
               </button>
@@ -251,8 +251,8 @@ export default function UsersPage() {
                   onClick={() => setRoleFilter(role)}
                   className={`h-10 cursor-pointer rounded-lg px-3 text-sm font-bold transition ${
                     isActive
-                      ? 'bg-teal-700 text-white shadow-md shadow-teal-900/12'
-                      : 'border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700'
+                      ? 'bg-blue-700 text-white shadow-md shadow-blue-900/12'
+                      : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >
                   {role === 'ALL' ? 'Tous' : role}
@@ -345,7 +345,7 @@ export default function UsersPage() {
                           onChange={(event) =>
                             handleRoleChange(user.id, event.target.value as UserRole)
                           }
-                          className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="USER">USER</option>
                           <option value="ADMIN">ADMIN</option>
