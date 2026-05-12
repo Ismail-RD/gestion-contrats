@@ -19,6 +19,12 @@ type OpenAiResponse = {
   }>;
 };
 
+type OpenAiErrorResponse = {
+  error?: {
+    message?: string;
+  };
+};
+
 @Injectable()
 export class ContractAiService {
   constructor(private readonly configService: ConfigService) {}
@@ -37,24 +43,15 @@ export class ContractAiService {
     const model =
       this.configService.get<string>('OPENAI_MODEL') ?? 'gpt-4.1-mini';
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        max_output_tokens: 900,
-        instructions:
-          'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat.',
-        input: this.buildPrompt(dto),
-      }),
-    });
+    const response = await this.callOpenAi(apiKey, model, dto);
 
     if (!response.ok) {
+      const errorMessage = await this.getOpenAiErrorMessage(response);
+
       throw new BadGatewayException(
-        "Le service IA n'a pas pu generer la description.",
+        errorMessage
+          ? `Erreur OpenAI: ${errorMessage}`
+          : "Le service IA n'a pas pu generer la description.",
       );
     }
 
@@ -68,6 +65,43 @@ export class ContractAiService {
     }
 
     return { description };
+  }
+
+  private async callOpenAi(
+    apiKey: string,
+    model: string,
+    dto: GenerateContractDescriptionDto,
+  ): Promise<Response> {
+    try {
+      return await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          max_output_tokens: 900,
+          instructions:
+            'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat.',
+          input: this.buildPrompt(dto),
+        }),
+      });
+    } catch {
+      throw new BadGatewayException(
+        'Impossible de joindre le service OpenAI depuis le serveur.',
+      );
+    }
+  }
+
+  private async getOpenAiErrorMessage(response: Response): Promise<string> {
+    try {
+      const data = (await response.json()) as OpenAiErrorResponse;
+
+      return data.error?.message ?? '';
+    } catch {
+      return '';
+    }
   }
 
   private buildPrompt(dto: GenerateContractDescriptionDto): string {

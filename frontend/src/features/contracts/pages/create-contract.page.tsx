@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
+import { getApiErrorMessage } from '../../../lib/axios';
 import {
   createContract,
   generateContractDescription,
@@ -59,8 +60,13 @@ export default function CreateContractPage() {
         description,
       }));
       toast.success('Description generee avec IA');
-    } catch {
-      toast.error("Impossible de generer la description pour l'instant");
+    } catch (generateError) {
+      toast.error(
+        getApiErrorMessage(
+          generateError,
+          "Impossible de generer la description pour l'instant",
+        ),
+      );
     } finally {
       setIsGeneratingDescription(false);
     }
