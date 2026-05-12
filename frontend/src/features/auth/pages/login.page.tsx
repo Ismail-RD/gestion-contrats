@@ -35,7 +35,7 @@ export default function LoginPage() {
         className="surface w-full max-w-md rounded-lg p-7"
       >
         <div className="mb-7 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-950 text-sm font-black text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15">
             GC
           </div>
           <div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
             />
             <input
               className="control h-12 w-full rounded-lg pl-10 pr-4 text-sm font-bold"
-              placeholder="Username"
+              placeholder="Nom d'utilisateur"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
@@ -70,7 +70,7 @@ export default function LoginPage() {
             <input
               type="password"
               className="control h-12 w-full rounded-lg pl-10 pr-4 text-sm font-bold"
-              placeholder="Password"
+              placeholder="Mot de passe"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -82,8 +82,8 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button className="h-12 w-full cursor-pointer rounded-lg bg-slate-950 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800">
-            Login
+          <button className="h-12 w-full cursor-pointer rounded-lg bg-teal-700 text-sm font-black text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
+            Connexion
           </button>
         </form>
       </motion.section>

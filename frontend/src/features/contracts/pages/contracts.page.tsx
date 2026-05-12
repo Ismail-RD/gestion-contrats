@@ -1,6 +1,6 @@
-import { Ban, Download, FilePlus2, Search, Trash2 } from 'lucide-react';
+import { Ban, Download, Eye, FilePlus2, Pencil, Search, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,9 +53,15 @@ export default function ContractsPage() {
     getContracts().then(setContracts);
   }, []);
 
-  useEffect(() => {
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
     setCurrentPage(1);
-  }, [search, statusFilter]);
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
 
   const filteredContracts = contracts.filter((contract) => {
     const query = search.toLowerCase();
@@ -185,7 +191,7 @@ export default function ContractsPage() {
 
           <button
             onClick={() => navigate('/contracts/new')}
-            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
           >
             <FilePlus2 size={18} />
             Ajouter
@@ -202,7 +208,7 @@ export default function ContractsPage() {
             />
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={handleSearchChange}
               placeholder="Rechercher titre, client ou numero..."
               className="control h-11 w-full rounded-lg pl-10 pr-4 text-sm font-medium"
             />
@@ -215,10 +221,10 @@ export default function ContractsPage() {
               return (
                 <button
                   key={option.value}
-                  onClick={() => setStatusFilter(option.value)}
+                  onClick={() => handleStatusFilterChange(option.value)}
                   className={`h-10 cursor-pointer rounded-lg px-3 text-sm font-bold transition ${
                     isActive
-                      ? 'bg-slate-950 text-white shadow-md shadow-slate-900/10'
+                      ? 'bg-teal-700 text-white shadow-md shadow-teal-900/12'
                       : 'border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700'
                   }`}
                 >
@@ -294,16 +300,18 @@ export default function ContractsPage() {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => navigate(`/contracts/${contract.id}`)}
-                        className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                        title="Voir"
                       >
-                        Voir
+                        <Eye size={17} />
                       </button>
 
                       <button
                         onClick={() => navigate(`/contracts/${contract.id}/edit`)}
-                        className="h-9 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        title="Modifier"
                       >
-                        Edit
+                        <Pencil size={17} />
                       </button>
 
                       {contract.status !== 'TERMINATED' && (

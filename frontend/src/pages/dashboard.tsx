@@ -86,6 +86,9 @@ export default function Dashboard() {
   }, []);
 
   const recentContracts = contracts.slice(0, 5);
+  const activeAmount = contracts
+    .filter((contract) => contract.status === 'ACTIVE')
+    .reduce((sum, contract) => sum + Number(contract.amount), 0);
 
   const monthlyData = useMemo(() => {
     const now = new Date();
@@ -134,28 +137,44 @@ export default function Dashboard() {
       value: stats.total,
       icon: FileText,
       tone: 'text-slate-950',
+      accent: 'bg-slate-900',
+      iconBox: 'bg-slate-100 text-slate-700',
       spark: monthlyData.map((item) => item.total),
+      stroke: '#172033',
+      fill: '#e2e8f0',
     },
     {
       label: 'Contrats actifs',
       value: stats.active,
       icon: CheckCircle2,
       tone: 'text-emerald-700',
+      accent: 'bg-emerald-500',
+      iconBox: 'bg-emerald-50 text-emerald-700',
       spark: [1, 2, 2, 3, 4, stats.active],
+      stroke: '#059669',
+      fill: '#d1fae5',
     },
     {
       label: 'Non signes',
       value: stats.unsigned ?? 0,
       icon: PenLine,
       tone: 'text-cyan-700',
+      accent: 'bg-cyan-500',
+      iconBox: 'bg-cyan-50 text-cyan-700',
       spark: [2, 3, 2, 4, 3, stats.unsigned ?? 0],
+      stroke: '#0891b2',
+      fill: '#cffafe',
     },
     {
       label: 'Expires',
       value: stats.expired,
       icon: AlertTriangle,
       tone: 'text-rose-700',
+      accent: 'bg-rose-500',
+      iconBox: 'bg-rose-50 text-rose-700',
       spark: [0, 1, 1, 2, 2, stats.expired],
+      stroke: '#e11d48',
+      fill: '#ffe4e6',
     },
   ];
 
@@ -174,26 +193,37 @@ export default function Dashboard() {
       transition={{ duration: 0.45, ease: 'easeOut' }}
       className="space-y-6"
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="surface flex flex-col gap-5 rounded-lg p-6 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-teal-700">
             Pilotage contrats
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
-            Dashboard
+            Tableau de bord
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-medium text-slate-500">
             Bienvenue, {user.fullName}. Vue consolidee des contrats clients.
           </p>
         </div>
 
-        <button
-          onClick={() => navigate('/contracts/new')}
-          className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
-        >
-          <FileText size={18} />
-          Nouveau contrat
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="rounded-lg border border-teal-100 bg-teal-50 px-4 py-3">
+            <p className="text-xs font-black uppercase text-teal-700">
+              Montant actif
+            </p>
+            <p className="mt-1 text-lg font-black text-slate-950">
+              {activeAmount.toLocaleString('fr-MA')} MAD
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/contracts/new')}
+            className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
+          >
+            <FileText size={18} />
+            Nouveau contrat
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -210,8 +240,9 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.06, duration: 0.38 }}
-              className="surface rounded-lg p-5"
+              className="surface relative overflow-hidden rounded-lg p-5"
             >
+              <span className={`absolute inset-x-0 top-0 h-1 ${card.accent}`} />
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold text-slate-500">
@@ -222,7 +253,7 @@ export default function Dashboard() {
                   </p>
                 </div>
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${card.iconBox}`}>
                   <Icon size={20} />
                 </div>
               </div>
@@ -233,8 +264,8 @@ export default function Dashboard() {
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="#0f766e"
-                      fill="#ccfbf1"
+                      stroke={card.stroke}
+                      fill={card.fill}
                       strokeWidth={2}
                       isAnimationActive
                     />

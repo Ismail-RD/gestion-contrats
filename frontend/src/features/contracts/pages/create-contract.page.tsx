@@ -206,7 +206,7 @@ export default function CreateContractPage() {
 
             <button
               type="submit"
-              className="cursor-pointer rounded-lg bg-slate-950 px-5 py-3 font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800"
+              className="cursor-pointer rounded-lg bg-teal-700 px-5 py-3 font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800"
             >
               Creer et envoyer la signature
             </button>

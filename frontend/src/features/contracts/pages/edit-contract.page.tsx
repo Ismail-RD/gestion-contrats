@@ -126,7 +126,7 @@ export default function EditContractPage() {
 
             <button
               type="submit"
-              className="cursor-pointer rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition hover:bg-slate-800"
+              className="cursor-pointer rounded-lg bg-teal-700 px-4 py-2 font-bold text-white shadow-sm transition hover:bg-teal-800"
             >
               Sauvegarder
             </button>
