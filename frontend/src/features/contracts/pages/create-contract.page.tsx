@@ -45,14 +45,15 @@ export default function CreateContractPage() {
     setIsGeneratingDescription(true);
 
     try {
+      const { description: existingDescription, ...contractFields } = form;
       const clientName =
         `${form.clientFirstName} ${form.clientLastName}`.trim();
 
       const { description } = await generateContractDescription({
-        ...form,
+        ...contractFields,
         clientName,
         amount: form.amount ? Number(form.amount) : undefined,
-        existingDescription: form.description,
+        existingDescription,
       });
 
       setForm((currentForm) => ({

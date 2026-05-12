@@ -52,4 +52,8 @@ export class GenerateContractDescriptionDto {
   @IsOptional()
   @IsString()
   existingDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

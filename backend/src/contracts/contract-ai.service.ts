@@ -109,6 +109,7 @@ export class ContractAiService {
       dto.clientName?.trim() ||
       `${dto.clientFirstName ?? ''} ${dto.clientLastName ?? ''}`.trim() ||
       'client non precise';
+    const existingDescription = dto.existingDescription ?? dto.description;
 
     return [
       'Redige une description contractuelle professionnelle en francais.',
@@ -126,8 +127,8 @@ export class ContractAiService {
       `Date de debut: ${dto.startDate || 'non precisee'}`,
       `Date de fin: ${dto.endDate || 'non precisee'}`,
       `Montant: ${dto.amount ? `${dto.amount} MAD` : 'non precise'}`,
-      dto.existingDescription
-        ? `Description existante a ameliorer: ${dto.existingDescription}`
+      existingDescription
+        ? `Description existante a ameliorer: ${existingDescription}`
         : 'Description existante: aucune',
     ].join('\n');
   }
