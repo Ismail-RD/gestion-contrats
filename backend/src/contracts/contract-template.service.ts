@@ -18,6 +18,11 @@ type CompanyProfile = {
   address: string;
 };
 
+type PdfTextPage = {
+  lines: string[];
+  isFirstPage: boolean;
+};
+
 @Injectable()
 export class ContractTemplateService {
   constructor(private readonly configService: ConfigService) {}
@@ -168,22 +173,39 @@ export class ContractTemplateService {
   buildPdf(contract: Contract): Buffer {
     const company = this.getCompanyProfile();
     const lines = this.buildPdfLines(contract);
-    const escapedLines = lines.map((line) => this.escapePdfText(line));
-    const textCommands = escapedLines
-      .map((line, index) => {
-        if (index === 0) {
-          return `(${line}) Tj`;
-        }
-
-        return `T* (${line}) Tj`;
-      })
-      .join('\n');
-
     const signatureImage = this.extractSignatureImage(contract.signatureDataUrl);
-    const imageCommand = signatureImage
-      ? '\nq\n170 0 0 66 362 86 cm\n/Sig Do\nQ'
-      : '';
-    const content = `q
+    const pages = this.paginatePdfLines(lines, Boolean(signatureImage));
+    const pageContents = pages.map((page, index) =>
+      page.isFirstPage
+        ? this.buildFirstPdfPageContent(
+            page.lines,
+            company,
+            contract,
+            index + 1,
+            pages.length,
+          )
+        : this.buildContinuationPdfPageContent(
+            page.lines,
+            contract,
+            index + 1,
+            pages.length,
+            signatureImage && index === pages.length - 1,
+          ),
+    );
+
+    return this.createPdfBuffer(pageContents, signatureImage);
+  }
+
+  private buildFirstPdfPageContent(
+    lines: string[],
+    company: CompanyProfile,
+    contract: Contract,
+    pageNumber: number,
+    totalPages: number,
+  ): string {
+    const textCommands = this.buildPdfTextCommands(lines);
+
+    return `q
 0.058 0.090 0.165 rg
 42 772 68 42 re f
 Q
@@ -235,9 +257,65 @@ BT
 50 596 Td
 14 TL
 ${textCommands}
-ET${imageCommand}`;
+ET
+BT
+/F1 8 Tf
+0.392 0.455 0.545 rg
+500 30 Td
+(Page ${pageNumber}/${totalPages}) Tj
+ET`;
+  }
 
-    return this.createPdfBuffer(content, signatureImage);
+  private buildContinuationPdfPageContent(
+    lines: string[],
+    contract: Contract,
+    pageNumber: number,
+    totalPages: number,
+    withSignatureImage?: boolean,
+  ): string {
+    const textCommands = this.buildPdfTextCommands(lines);
+    const imageCommand = withSignatureImage
+      ? '\nq\n170 0 0 66 362 86 cm\n/Sig Do\nQ'
+      : '';
+
+    return `BT
+/F1 12 Tf
+0.058 0.090 0.165 rg
+42 800 Td
+(${this.escapePdfText(contract.title)}) Tj
+/F1 9 Tf
+0.392 0.455 0.545 rg
+0 -15 Td
+(Contrat n ${this.escapePdfText(contract.contractNumber)} - suite) Tj
+ET
+0.858 0.902 0.941 RG
+42 770 511 1 re S
+BT
+/F1 10 Tf
+0.058 0.090 0.165 rg
+50 742 Td
+14 TL
+${textCommands}
+ET${imageCommand}
+BT
+/F1 8 Tf
+0.392 0.455 0.545 rg
+500 30 Td
+(Page ${pageNumber}/${totalPages}) Tj
+ET`;
+  }
+
+  private buildPdfTextCommands(lines: string[]): string {
+    return lines
+      .map((line) => this.escapePdfText(line))
+      .map((line, index) => {
+        if (index === 0) {
+          return `(${line}) Tj`;
+        }
+
+        return `T* (${line}) Tj`;
+      })
+      .join('\n');
   }
 
   private buildPdfLines(contract: Contract): string[] {
@@ -285,20 +363,32 @@ ET${imageCommand}`;
     ].filter(Boolean);
   }
 
-  private createPdfBuffer(content: string, signatureImage?: SignatureImage): Buffer {
-    const imageResource = signatureImage ? ' /XObject << /Sig 6 0 R >>' : '';
+  private createPdfBuffer(
+    pageContents: string[],
+    signatureImage?: SignatureImage,
+  ): Buffer {
+    const fontObjectNumber = 3;
+    const imageObjectNumber = signatureImage ? 4 : undefined;
+    const pageObjectStart = signatureImage ? 5 : 4;
+    const contentObjectStart = pageObjectStart + pageContents.length;
+    const pageObjectNumbers = pageContents.map(
+      (_, index) => pageObjectStart + index,
+    );
+    const contentObjectNumbers = pageContents.map(
+      (_, index) => contentObjectStart + index,
+    );
+    const imageResource = imageObjectNumber
+      ? ` /XObject << /Sig ${imageObjectNumber} 0 R >>`
+      : '';
     const objects: Buffer[] = [
       Buffer.from('<< /Type /Catalog /Pages 2 0 R >>', 'ascii'),
-      Buffer.from('<< /Type /Pages /Kids [3 0 R] /Count 1 >>', 'ascii'),
       Buffer.from(
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >>${imageResource} >> /Contents 5 0 R >>`,
+        `<< /Type /Pages /Kids [${pageObjectNumbers
+          .map((objectNumber) => `${objectNumber} 0 R`)
+          .join(' ')}] /Count ${pageContents.length} >>`,
         'ascii',
       ),
       Buffer.from('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', 'ascii'),
-      Buffer.from(
-        `<< /Length ${Buffer.byteLength(content, 'ascii')} >>\nstream\n${content}\nendstream`,
-        'ascii',
-      ),
     ];
 
     if (signatureImage) {
@@ -313,6 +403,24 @@ ET${imageCommand}`;
         ]),
       );
     }
+
+    pageContents.forEach((_, index) => {
+      objects.push(
+        Buffer.from(
+          `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontObjectNumber} 0 R >>${imageResource} >> /Contents ${contentObjectNumbers[index]} 0 R >>`,
+          'ascii',
+        ),
+      );
+    });
+
+    pageContents.forEach((content) => {
+      objects.push(
+        Buffer.from(
+          `<< /Length ${Buffer.byteLength(content, 'ascii')} >>\nstream\n${content}\nendstream`,
+          'ascii',
+        ),
+      );
+    });
 
     const chunks: Buffer[] = [Buffer.from('%PDF-1.4\n', 'ascii')];
     const offsets: number[] = [];
@@ -332,6 +440,32 @@ ET${imageCommand}`;
     xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${body.length}\n%%EOF`;
 
     return Buffer.concat([body, Buffer.from(xref, 'ascii')]);
+  }
+
+  private paginatePdfLines(
+    lines: string[],
+    reserveSignatureSpace: boolean,
+  ): PdfTextPage[] {
+    const firstPageLineCount = reserveSignatureSpace ? 29 : 38;
+    const continuationLineCount = reserveSignatureSpace ? 41 : 48;
+    const pages: PdfTextPage[] = [];
+    let remainingLines = [...lines];
+
+    pages.push({
+      isFirstPage: true,
+      lines: remainingLines.slice(0, firstPageLineCount),
+    });
+    remainingLines = remainingLines.slice(firstPageLineCount);
+
+    while (remainingLines.length > 0) {
+      pages.push({
+        isFirstPage: false,
+        lines: remainingLines.slice(0, continuationLineCount),
+      });
+      remainingLines = remainingLines.slice(continuationLineCount);
+    }
+
+    return pages;
   }
 
   private extractSignatureImage(dataUrl?: string | null): SignatureImage | undefined {
