@@ -31,6 +31,8 @@ FRONTEND_URL=https://your-frontend-domain.vercel.app
 FRONTEND_URLS=https://your-frontend-domain.vercel.app,http://localhost:5173
 MAIL_FROM="Gestion des contrats <verified-sender@example.com>"
 BREVO_API_KEY=xkeysib-your_brevo_api_key
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
 
 # Fallback SMTP si BREVO_API_KEY n'est pas defini
 MAIL_HOST=smtp-relay.brevo.com

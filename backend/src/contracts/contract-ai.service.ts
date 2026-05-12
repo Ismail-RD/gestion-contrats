@@ -8,18 +8,18 @@ import { ConfigService } from '@nestjs/config';
 import { GenerateContractDescriptionDto } from './dto/generate-contract-description.dto';
 
 type OpenAiTextContent = {
-  type?: string;
   text?: string;
 };
 
-type OpenAiResponse = {
-  output_text?: string;
-  output?: Array<{
-    content?: OpenAiTextContent[];
+type GeminiResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: OpenAiTextContent[];
+    };
   }>;
 };
 
-type OpenAiErrorResponse = {
+type GeminiErrorResponse = {
   error?: {
     message?: string;
   };
@@ -32,30 +32,30 @@ export class ContractAiService {
   async generateDescription(
     dto: GenerateContractDescriptionDto,
   ): Promise<{ description: string }> {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
 
     if (!apiKey) {
       throw new ServiceUnavailableException(
-        "La generation IA n'est pas configuree sur le serveur.",
+        "La generation IA Gemini n'est pas configuree sur le serveur.",
       );
     }
 
     const model =
-      this.configService.get<string>('OPENAI_MODEL') ?? 'gpt-4.1-mini';
+      this.configService.get<string>('GEMINI_MODEL') ?? 'gemini-2.5-flash';
 
-    const response = await this.callOpenAi(apiKey, model, dto);
+    const response = await this.callGemini(apiKey, model, dto);
 
     if (!response.ok) {
-      const errorMessage = await this.getOpenAiErrorMessage(response);
+      const errorMessage = await this.getGeminiErrorMessage(response);
 
       throw new BadGatewayException(
         errorMessage
-          ? `Erreur OpenAI: ${errorMessage}`
+          ? `Erreur Gemini: ${errorMessage}`
           : "Le service IA n'a pas pu generer la description.",
       );
     }
 
-    const data = (await response.json()) as OpenAiResponse;
+    const data = (await response.json()) as GeminiResponse;
     const description = this.extractText(data).trim();
 
     if (!description) {
@@ -67,36 +67,55 @@ export class ContractAiService {
     return { description };
   }
 
-  private async callOpenAi(
+  private async callGemini(
     apiKey: string,
     model: string,
     dto: GenerateContractDescriptionDto,
   ): Promise<Response> {
     try {
-      return await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+      return await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [
+                {
+                  text: 'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat.',
+                },
+              ],
+            },
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    text: this.buildPrompt(dto),
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              maxOutputTokens: 900,
+              temperature: 0.4,
+            },
+          }),
         },
-        body: JSON.stringify({
-          model,
-          max_output_tokens: 900,
-          instructions:
-            'Tu es un assistant de redaction contractuelle pour une application marocaine de gestion de contrats. Redige uniquement un texte utilisable dans un champ "Description et conditions". N ajoute pas de markdown, de titre, de conseils juridiques externes, ni de mention disant de consulter un avocat.',
-          input: this.buildPrompt(dto),
-        }),
-      });
+      );
     } catch {
       throw new BadGatewayException(
-        'Impossible de joindre le service OpenAI depuis le serveur.',
+        'Impossible de joindre le service Gemini depuis le serveur.',
       );
     }
   }
 
-  private async getOpenAiErrorMessage(response: Response): Promise<string> {
+  private async getGeminiErrorMessage(response: Response): Promise<string> {
     try {
-      const data = (await response.json()) as OpenAiErrorResponse;
+      const data = (await response.json()) as GeminiErrorResponse;
 
       return data.error?.message ?? '';
     } catch {
@@ -133,16 +152,12 @@ export class ContractAiService {
     ].join('\n');
   }
 
-  private extractText(response: OpenAiResponse): string {
-    if (response.output_text) {
-      return response.output_text;
-    }
-
+  private extractText(response: GeminiResponse): string {
     return (
-      response.output
-        ?.flatMap((item) => item.content ?? [])
-        .filter((content) => content.type === 'output_text' && content.text)
-        .map((content) => content.text)
+      response.candidates
+        ?.flatMap((candidate) => candidate.content?.parts ?? [])
+        .map((part) => part.text)
+        .filter(Boolean)
         .join('\n') ?? ''
     );
   }
