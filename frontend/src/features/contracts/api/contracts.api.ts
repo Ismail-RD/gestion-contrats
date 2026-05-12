@@ -23,6 +23,13 @@ export type createContractData ={
     amount: number;
 }
 
+export type GenerateContractDescriptionData = Partial<
+    Omit<createContractData, 'amount'>
+> & {
+    amount?: number;
+    existingDescription?: string;
+};
+
 export type ContractStats ={
     total: number;
     active: number;
@@ -81,6 +88,13 @@ export const getContracts = async () => {
 
 export const createContract = async (data: createContractData)=>{
     const res = await api.post("/contracts",data);
+    return res.data;
+}
+
+export const generateContractDescription = async (
+    data: GenerateContractDescriptionData,
+): Promise<{ description: string }> => {
+    const res = await api.post('/contracts/ai/generate-description', data);
     return res.data;
 }
 

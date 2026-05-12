@@ -14,9 +14,11 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { ContractAiService } from './contract-ai.service';
 import { ContractsService } from './contracts.service';
 import { ConfirmSignatureDto } from './dto/confirm-signature.dto';
 import { CreateContractDto } from './dto/create-contract.dto';
+import { GenerateContractDescriptionDto } from './dto/generate-contract-description.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
 import { JwtAuthGuard } from '../auth/guards/auth-jwt.guard';
 import { User } from '../users/entities/user.entity';
@@ -27,7 +29,10 @@ type RequestWithUser = Request & {
 
 @Controller('contracts')
 export class ContractsController {
-  constructor(private readonly contractsService: ContractsService) {}
+  constructor(
+    private readonly contractsService: ContractsService,
+    private readonly contractAiService: ContractAiService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -54,6 +59,12 @@ export class ContractsController {
   @Get('expiring-soon')
   findExpiringSoon(@Req() req: RequestWithUser) {
     return this.contractsService.findExpiringSoon(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('ai/generate-description')
+  generateDescription(@Body() dto: GenerateContractDescriptionDto) {
+    return this.contractAiService.generateDescription(dto);
   }
 
   @Get('signature/:token')

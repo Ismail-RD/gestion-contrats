@@ -1,8 +1,12 @@
+import { Sparkles } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
-import { createContract } from '../api/contracts.api';
+import {
+  createContract,
+  generateContractDescription,
+} from '../api/contracts.api';
 
 export default function CreateContractPage() {
   const navigate = useNavigate();
@@ -23,6 +27,7 @@ export default function CreateContractPage() {
   });
 
   const [error, setError] = useState('');
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const handleChange = (
     e: ChangeEvent<
@@ -33,6 +38,32 @@ export default function CreateContractPage() {
       ...form,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleGenerateDescription = async () => {
+    setIsGeneratingDescription(true);
+
+    try {
+      const clientName =
+        `${form.clientFirstName} ${form.clientLastName}`.trim();
+
+      const { description } = await generateContractDescription({
+        ...form,
+        clientName,
+        amount: form.amount ? Number(form.amount) : undefined,
+        existingDescription: form.description,
+      });
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        description,
+      }));
+      toast.success('Description generee avec IA');
+    } catch {
+      toast.error("Impossible de generer la description pour l'instant");
+    } finally {
+      setIsGeneratingDescription(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -187,13 +218,31 @@ export default function CreateContractPage() {
             className="control rounded-lg p-3 md:col-span-2"
           />
 
-          <textarea
-            name="description"
-            placeholder="Description et conditions"
-            value={form.description}
-            onChange={handleChange}
-            className="control rounded-lg p-3 md:col-span-2"
-          />
+          <div className="space-y-2 md:col-span-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-bold text-slate-500">
+                Description et conditions
+              </p>
+
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDescription}
+                className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 text-sm font-bold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Sparkles size={17} />
+                {isGeneratingDescription ? 'Generation...' : 'Generer avec IA'}
+              </button>
+            </div>
+
+            <textarea
+              name="description"
+              placeholder="Description et conditions"
+              value={form.description}
+              onChange={handleChange}
+              className="control min-h-40 w-full rounded-lg p-3"
+            />
+          </div>
 
           <div className="flex justify-end gap-3 md:col-span-2">
             <button
