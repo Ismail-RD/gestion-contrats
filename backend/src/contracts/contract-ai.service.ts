@@ -16,6 +16,7 @@ type GeminiResponse = {
     content?: {
       parts?: OpenAiTextContent[];
     };
+    finishReason?: string;
   }>;
 };
 
@@ -43,20 +44,11 @@ export class ContractAiService {
     const model =
       this.configService.get<string>('GEMINI_MODEL') ?? 'gemini-2.5-flash';
 
-    const response = await this.callGemini(apiKey, model, dto);
-
-    if (!response.ok) {
-      const errorMessage = await this.getGeminiErrorMessage(response);
-
-      throw new BadGatewayException(
-        errorMessage
-          ? `Erreur Gemini: ${errorMessage}`
-          : "Le service IA n'a pas pu generer la description.",
-      );
-    }
-
-    const data = (await response.json()) as GeminiResponse;
-    const description = this.extractText(data).trim();
+    const description = await this.generateContractSections(
+      apiKey,
+      model,
+      dto,
+    );
 
     if (!description) {
       throw new BadGatewayException(
@@ -67,13 +59,37 @@ export class ContractAiService {
     return { description };
   }
 
-  private async callGemini(
+  private async generateContractSections(
     apiKey: string,
     model: string,
     dto: GenerateContractDescriptionDto,
-  ): Promise<Response> {
+  ): Promise<string> {
+    const context = this.buildContractContext(dto);
+    const sections: string[] = [];
+
+    for (const batch of this.getClauseBatches()) {
+      const section = await this.generateCompleteText(
+        apiKey,
+        model,
+        this.buildSectionPrompt(context, batch),
+      );
+
+      if (section.trim()) {
+        sections.push(section.trim());
+      }
+    }
+
+    return sections.join('\n\n').trim();
+  }
+
+  private async requestGemini(
+    apiKey: string,
+    model: string,
+    prompt: string,
+    maxOutputTokens: number,
+  ): Promise<GeminiResponse> {
     try {
-      return await fetch(
+      const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: 'POST',
@@ -94,19 +110,35 @@ export class ContractAiService {
                 role: 'user',
                 parts: [
                   {
-                    text: this.buildPrompt(dto),
+                    text: prompt,
                   },
                 ],
               },
             ],
             generationConfig: {
-              maxOutputTokens: 3500,
+              maxOutputTokens,
               temperature: 0.55,
             },
           }),
         },
       );
-    } catch {
+
+      if (!response.ok) {
+        const errorMessage = await this.getGeminiErrorMessage(response);
+
+        throw new BadGatewayException(
+          errorMessage
+            ? `Erreur Gemini: ${errorMessage}`
+            : "Le service IA n'a pas pu generer la description.",
+        );
+      }
+
+      return (await response.json()) as GeminiResponse;
+    } catch (error) {
+      if (error instanceof BadGatewayException) {
+        throw error;
+      }
+
       throw new BadGatewayException(
         'Impossible de joindre le service Gemini depuis le serveur.',
       );
@@ -123,7 +155,7 @@ export class ContractAiService {
     }
   }
 
-  private buildPrompt(dto: GenerateContractDescriptionDto): string {
+  private buildContractContext(dto: GenerateContractDescriptionDto): string {
     const clientName =
       dto.clientName?.trim() ||
       `${dto.clientFirstName ?? ''} ${dto.clientLastName ?? ''}`.trim() ||
@@ -131,14 +163,6 @@ export class ContractAiService {
     const existingDescription = dto.existingDescription ?? dto.description;
 
     return [
-      'Redige un texte contractuel detaille en francais pour le champ "Description et conditions".',
-      'Longueur obligatoire: minimum 900 mots. Si la premiere version est trop courte, continue et enrichis jusqu a atteindre cette longueur.',
-      'Structure obligatoire: clauses numerotees de 1 a 10 avec des paragraphes complets, pas une phrase courte par clause.',
-      'Chaque clause doit contenir des details pratiques, des obligations concretes, des modalites d execution et des consequences en cas de non-respect lorsque c est pertinent.',
-      'Clauses a couvrir obligatoirement: objet du contrat, perimetre de la prestation, duree, montant et paiement, obligations du prestataire, obligations du client, suivi et validation, confidentialite et donnees, signature, resiliation et effets de fin de contrat.',
-      "Lorsque certaines informations ne sont pas precisees, utilise des formulations standards prudentes adaptees a un contrat de services de maintenance informatique, sans inventer de nouvelles dates, de nouveaux montants ou de nouvelles identites.",
-      'Ne fais pas de markdown. N ajoute pas de conclusion hors contrat. N utilise pas de puces. Le resultat doit etre directement copiable dans le contrat.',
-      '',
       `Titre: ${dto.title || 'non precise'}`,
       `Numero du contrat: ${dto.contractNumber || 'non precise'}`,
       `Client: ${clientName}`,
@@ -153,6 +177,83 @@ export class ContractAiService {
         ? `Description existante a ameliorer: ${existingDescription}`
         : 'Description existante: aucune',
     ].join('\n');
+  }
+
+  private async generateCompleteText(
+    apiKey: string,
+    model: string,
+    prompt: string,
+  ): Promise<string> {
+    let fullText = '';
+    let currentPrompt = prompt;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const data = await this.requestGemini(
+        apiKey,
+        model,
+        currentPrompt,
+        attempt === 0 ? 1800 : 900,
+      );
+      const text = this.extractText(data).trim();
+
+      if (!text) {
+        break;
+      }
+
+      fullText = this.appendGeneratedText(fullText, text);
+
+      if (data.candidates?.[0]?.finishReason !== 'MAX_TOKENS') {
+        break;
+      }
+
+      currentPrompt = [
+        'Le texte contractuel suivant a ete interrompu avant la fin.',
+        'Continue exactement a partir de la derniere phrase, sans repeter le debut, sans ajouter de titre et sans recommencer la numerotation.',
+        '',
+        'Texte deja redige:',
+        fullText,
+      ].join('\n');
+    }
+
+    return fullText;
+  }
+
+  private appendGeneratedText(currentText: string, nextText: string): string {
+    if (!currentText) {
+      return nextText;
+    }
+
+    if (/\s$/.test(currentText) || /^[,.;:!?)]/.test(nextText)) {
+      return `${currentText}${nextText}`;
+    }
+
+    return `${currentText} ${nextText}`;
+  }
+
+  private buildSectionPrompt(context: string, batch: string): string {
+    return [
+      'Redige uniquement les clauses demandees ci-dessous pour le champ "Description et conditions" d un contrat.',
+      'Chaque clause doit etre detaillee, operationnelle et composee de 2 a 4 paragraphes complets.',
+      'Chaque paragraphe doit contenir des obligations concretes, des modalites pratiques et des consequences en cas de non-respect lorsque c est pertinent.',
+      'Ne fais pas de markdown. N utilise pas de puces. Ne resume pas. Ne redige aucune clause non demandee.',
+      "Lorsque des informations manquent, utilise des formulations standards prudentes adaptees a un contrat de services de maintenance informatique, sans inventer de nouvelles dates, de nouveaux montants ou de nouvelles identites.",
+      '',
+      'Contexte du contrat:',
+      context,
+      '',
+      'Clauses a rediger:',
+      batch,
+    ].join('\n');
+  }
+
+  private getClauseBatches(): string[] {
+    return [
+      '1. Objet du contrat\n2. Perimetre detaille de la prestation',
+      '3. Duree du contrat\n4. Montant, facturation et modalites de paiement',
+      '5. Obligations du prestataire\n6. Obligations du client',
+      '7. Suivi, validation et reception des prestations\n8. Confidentialite, acces et protection des donnees',
+      '9. Signature et entree en vigueur\n10. Resiliation, effets de fin de contrat et restitution',
+    ];
   }
 
   private extractText(response: GeminiResponse): string {
